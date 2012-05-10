@@ -15,7 +15,7 @@ For running this software on your computer you will need:
 [Processing](http://processing.org/download/)
 
 * **ControlP5**: a GUI library for Processing:
-[ControlP5](www.sojamo.de/libraries/controlp5)
+[ControlP5](http://www.sojamo.de/libraries/controlp5)
 
 * Then just open the .pde file with Processing and run it.
 
