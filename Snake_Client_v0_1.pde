@@ -33,6 +33,12 @@ Serial robot;
 
 StringBuffer command = new StringBuffer();
 
+//-- Configuring the hardware dispostion:
+final int NUM_X_AXIS = 4;
+final int NUM_Y_AXIS = 1;
+
+final boolean HEAD = true;
+
 //-- If you changed your init_key on the firmware you should also change it here:
 String init_key = "i1234";
 
@@ -150,17 +156,36 @@ void draw() {
          
     if (phase_X != Phase_X)
          {
-           /*This works for a head module*/
-           int ph = -180;
-           phase_X = Phase_X;
-           robot.write( "X0P" + ph);
-           ph+=180;
-           robot.write("X0P" + ph);
-           ph+=phase_X;
-           robot.write("X1P" + ph);
-           ph+=phase_X;
-           robot.write("X2P" + ph);
-           
+           if (HEAD)
+           {  
+               int ph = 0;
+               phase_X = Phase_X;
+               
+               robot.write(" X0P-180");
+               
+               for (int i = 1; i < NUM_X_AXIS; i++)
+               {
+                String send = "X" + i + "P" + ph;
+                 ph+=phase_X;
+                 
+                 robot.write(send);
+                 println(send);
+               }
+           }
+           else
+           {  
+               int ph = 0;
+               phase_X = Phase_X;
+                 
+               for (int i = 0; i < NUM_X_AXIS; i++)
+               {
+                String send = "X" + i + "P" + ph;
+                 ph+=phase_X;
+                 
+                 robot.write(send);
+                 println(send);
+              }
+           }
          }
          
          
@@ -181,7 +206,18 @@ void draw() {
          {
            int ph = 0;
            phase_Y = Phase_Y;
-           robot.write( "Y0P" + phase_Y);
+           
+           for (int i = 0; i<  NUM_Y_AXIS; i++)
+           {
+             String send = "Y" + i + "P" + ph;
+             
+             ph+=phase_Y;
+             
+             robot.write( send );
+             println( send );
+             
+           }
+           
          }
 }
 
