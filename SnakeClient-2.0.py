@@ -12,6 +12,7 @@ __license__ = 'GPLv3'
 # ------------------------------------------------------------------------------
 import serial
 import time
+import sys
 
 # Define constants:
 # ------------------------------------------------------------------------------
@@ -132,12 +133,19 @@ def startup( portName, baudRate):
 # Main function:
 # ------------------------------------------------------------------------------
 def main():
+	if len(sys.argv) == 3:
+		portName = sys.argv[1]
+		baudRate = int(sys.argv[2])
+	else:
+		portName = '/dev/ttyUSB0'
+		baudRate = 9600
+	
 	print '[+] Testing command generation...'
 	print commandWave(60,  0,  0, X_AXIS)
 	print commandWave( 0, 60,  0, ALL_AXES)
 
 	print '[+] Testing connection...'
-	serialPort = startup( '/dev/ttyUSB0', 9600)
+	serialPort = startup( portName, baudRate)
 
 
 	serialPort.write( commandPeriod( 4000) )
