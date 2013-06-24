@@ -6,11 +6,15 @@ __author__ = 'David Estevez-Fernandez'
 __license__ = 'GPLv3'
 
 import wx
+import glob
 
 class MainWin( wx.Frame):
 
-	def __init__(self, parent, title):
-		super( MainWin, self).__init__(parent, title=title, size=(600, 150) )
+	def __init__(self, parent, core):
+		super( MainWin, self).__init__(parent, title='SnakeClient', size=(600, 200) )
+
+		# Load Config file:
+		self.parseConfig()
 
 		self.InitUI()
 		self.Centre()
@@ -18,6 +22,9 @@ class MainWin( wx.Frame):
 
 	def InitUI(self):
 		panel = wx.Panel(self)
+
+		font = wx.SystemSettings_GetFont(wx.SYS_SYSTEM_FONT)
+		font.SetPointSize(9)
 	
 		# Control for the period
 		self.textT = wx.StaticText( panel, label='Period (ms):', pos=(5, 10) )
@@ -26,13 +33,66 @@ class MainWin( wx.Frame):
 		self.spinT.SetValue(4000)
 	
 		# Control sets
-		ControlSet( panel, label='X Axis 1', pos = (5, 40) )
-		ControlSet( panel, label='Y Axis 1', pos = (300, 40) )
+		self.setX0 = ControlSet( panel, label='X Axis 1', pos = (5, 40) )
+		self.setY0 = ControlSet( panel, label='Y Axis 1', pos = (300, 40) )
 
 		# Controls for connecting to robot
-		self.textPortName = wx.StaticText( panel, label='Port:', pos=(5, 130))
+		self.serialBox = wx.StaticBox( panel, label='Serial Settings', pos=(5, 140), size=(580, 55))
+
+		self.textPortName = wx.StaticText( panel, label='Port:', pos=(10, 165))
+		self.portCombo = wx.ComboBox( panel, pos=(40, 160), size=(120,25), 
+				choices = self.getSerialPorts(), style=wx.CB_READONLY)
+		self.portCombo.SetStringSelection( self.getSerialPorts()[0])
+
+		self.textBaudRate = wx.StaticText( panel, label='BaudRate:', pos=(175, 165))
+		self.inputBaudRate = wx.TextCtrl( panel, pos=(240, 160), size=(70, 25))
+		self.inputBaudRate.SetValue('9600')
+
+		self.textStatus = wx.StaticText( panel, label='Status:', pos=(320, 165))
+	
+		self.connectButton = wx.Button( panel, label='Connect', size=(100, 25), pos=(475, 160))
+		self.connectButton.Bind( wx.EVT_BUTTON, self.connect)
+
+	def parseConfig(self):
+		"""
+			Opens the file "config.txt" and reads the configuration values
+		"""
+		try:
+			f = open( './config.txt', 'r')
+			self.x_sets = int( f.readline().strip('x_axis=').strip('\n'))
+			self.y_sets = int( f.readline().strip('y_axis=').strip('\n'))
+			f.close()
+		except e:
+			print e
+
+	def connect(self, e):
+		"""
+			Connects to the robot
+		"""
+		# Show password dialog:
+		self.passwordDialog = wx.PasswordEntryDialog( self, 'Insert SnakeServer password:', 
+							'Insert password')
+		self.passwordDialog.ShowModal()
+
+		
+		print ( self.portCombo.GetStringSelection(), self.inputBaudRate.GetString(0, -1), self.passwordDialog.GetValue())
+
+		
+	def setStatus( self, text):
+		"""
+			Sets the status
+		"""
+		self.textStatus.SetLabel( 'Status: ' + text)
 
 
+	def getSerialPorts(self):
+		"""
+			Returns the available serial ports
+		"""
+		return glob.glob('/dev/ttyUSB*') + glob.glob('/dev/ttyACM*') + glob.glob("/dev/tty.*") + glob.glob("/dev/cu.*") + glob.glob("/dev/rfcomm*")
+		
+	
+	
 class ControlSet( ):
 	
 	def __init__( self, panel, label, pos):
@@ -111,5 +171,5 @@ class ControlSet( ):
 
 if __name__ == '__main__':
 	app = wx.App()
-	MainWin( None, title='SnakeClient')
+	MainWin( None, None)
 	app.MainLoop()
