@@ -3,7 +3,7 @@ SnakeClient
 
 Control a robotic modular snake through a GUI program.
 
-![ScreenShot](https://raw.github.com/David-Estevez/SnakeClient/master/screenshots/screenshot.png)
+![ScreenShot](https://raw.github.com/David-Estevez/SnakeClient/master/screenshots/screenshot-01.png)
 
  * Author: [David Estévez-Fernández](http://github.com/David-Estevez)
  * Released under GPLv3 license , Jun 2013
