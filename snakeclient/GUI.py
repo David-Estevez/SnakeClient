@@ -19,8 +19,7 @@ class MainWin( wx.Frame):
 		self.parseConfig()
 	
 		# Construct the window
-		super( MainWin, self).__init__(parent, title='SnakeClient', size=(600, 100+100*max( self.x_sets, self.y_sets)),
-			style=wx.DEFAULT_FRAME_STYLE ^ wx.RESIZE_BORDER)
+		super( MainWin, self).__init__(parent, title='SnakeClient', size=(600, 100+100*max( self.x_sets, self.y_sets)), style=wx.DEFAULT_FRAME_STYLE ^ wx.RESIZE_BORDER)
 
 		self.InitUI()
 		self.Centre()
@@ -36,13 +35,14 @@ class MainWin( wx.Frame):
 		# Control for the period
 		self.textT = wx.StaticText( self.panel, label='Period (ms):', pos=(5, 10) )
 		self.spinT = wx.SpinCtrl( self.panel, pos=(80, 5), size=(60, -1))
-		self.spinT.SetRange(0, 20000)
+		self.spinT.SetRange(1, 20000)
 		self.spinT.SetValue(4000)
+		self.spinT.Bind( wx.EVT_SPINCTRL, self.sendT)
 	
 		# Control sets
 		self.setsX = []
 		self.setsY = []
-
+		
 		for i in range( self.x_sets ):
 			self.setsX.append( ControlSet( self, label='X Axis ' + str(i), pos = (5, 40 + 100*i ),
 						 identifier=(0,i)))
@@ -50,22 +50,29 @@ class MainWin( wx.Frame):
 		for i in range( self.y_sets):
 			self.setsY.append( ControlSet( self, label='Y Axis' + str(i), pos = (300, 40+ 100*i ),
 						identifier=(1, i)))
-
+		
 		# Serial connection controls
 		self.serialControls = SerialControls( self, pos = (5, 40 + 100*max( self.x_sets, self.y_sets) ))
-
+		
 
 	def parseConfig(self):
 		"""
 			Opens the file "config.txt" and reads the configuration values
 		"""
 		try:
-			f = open( '../config.txt', 'r')
+			f = open( './config.txt', 'r')
 			self.x_sets = int( f.readline().strip('x_axis=').strip('\n'))
 			self.y_sets = int( f.readline().strip('y_axis=').strip('\n'))
 			f.close()
-		except e:
+		except Exception, e:
 			print e
+			exit(1)
+	
+	def sendT( self, e):
+		"""
+			Sends the period to the robot
+		"""
+		self.core.sendPeriod( self.spinT.GetValue() )
 
 
 # class ControlSet
@@ -80,7 +87,7 @@ class ControlSet( ):
 		"""
 		self.parent = parent
 		self.identifier = identifier
-		panel = self.parent
+		panel = self.parent.panel
 
 		# Box around the controls
 		self.box = wx.StaticBox( panel, label=label, pos=pos, size=(290, 90)) 
@@ -181,27 +188,27 @@ class SerialControls:
 		y = pos[1]
 
 		self.parent = parent
-		panel = self.parent
+		panel = self.parent.panel
 
 		# Serial controls
 		self.serialBox = wx.StaticBox( panel, label='Serial Settings', pos=(x, y), size=(580, 55))
 
-		self.textPortName = wx.StaticText( panel, label='Port:', pos=(x+5, y+25))
-
+		self.buttonPort = wx.Button( panel, label='Port:', pos=(x+5, y+20), size=(50, 25))
+		self.buttonPort.Bind( wx.EVT_BUTTON, self.refresh)
 		self.portList = self.getSerialPorts()
-		self.portCombo = wx.ComboBox( panel, pos=(x+35, y+20), size=(120,25), 
+		self.portCombo = wx.ComboBox( panel, pos=(x+55, y+20), size=(120,25), 
 				choices = self.portList, style=wx.CB_READONLY)
 
 		if ( len(self.portList) > 0):
 			self.portCombo.SetStringSelection( self.portList[0])
 
-		self.textBaudRate = wx.StaticText( panel, label='BaudRate:', pos=(x+170, y+25))
-		self.inputBaudRate = wx.TextCtrl( panel, pos=(x+235, y+20), size=(70, 25))
+		self.textBaudRate = wx.StaticText( panel, label='BaudRate:', pos=(x+180, y+25))
+		self.inputBaudRate = wx.TextCtrl( panel, pos=(x+245, y+20), size=(70, 25))
 		self.inputBaudRate.SetValue('9600')
 
-		self.textStatus = wx.StaticText( panel, label='Status:', pos=(x+315, y+25))
+		self.textStatus = wx.StaticText( panel, label='Status:', pos=(x+325, y+25))
 	
-		self.connectButton = wx.Button( panel, label='Connect', size=(100, 25), pos=(x+470, y+20))
+		self.connectButton = wx.Button( panel, label='Connect', size=(80, 25), pos=(x+490, y+20))
 		self.connectButton.Bind( wx.EVT_BUTTON, self.connect)
 
 
@@ -214,8 +221,7 @@ class SerialControls:
 
 		if ( portName and baudRate ):
 			# Show password dialog:
-			self.passwordDialog = wx.PasswordEntryDialog( self.parent, 'Insert SnakeServer password:',
-									 'Insert password')
+			self.passwordDialog = wx.PasswordEntryDialog( self.parent, 'Insert SnakeServer password:', 'Insert password')
 			self.passwordDialog.ShowModal()
 
 			self.setStatus('Waiting for reset')
@@ -235,6 +241,16 @@ class SerialControls:
 			Returns the available serial ports
 		"""
 		return glob.glob('/dev/ttyUSB*') + glob.glob('/dev/ttyACM*') + glob.glob("/dev/tty.*") + glob.glob("/dev/cu.*") + glob.glob("/dev/rfcomm*")
+
+
+	def refresh(self, e):
+		"""
+			Updates the list of ports
+		"""
+		self.portCombo.Clear()
+
+		for port in self.getSerialPorts():
+			self.portCombo.Append( port)
 		
 	
 
