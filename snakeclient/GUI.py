@@ -38,7 +38,14 @@ class MainWin( wx.Frame):
 		self.spinT.SetRange(1, 20000)
 		self.spinT.SetValue(4000)
 		self.spinT.Bind( wx.EVT_SPINCTRL, self.sendT)
-	
+
+		# Lock & Stop controls
+		self.checkLockX = wx.CheckBox( self.panel, label='Lock X', pos=(380,10))
+		self.checkLockY = wx.CheckBox( self.panel, label='Lock Y', pos=(450,10))
+
+		self.buttonStop = wx.Button( self.panel, label='Stop!', pos=(530, 10), size=(60, 25))
+		self.buttonStop.Bind( wx.EVT_BUTTON, self.sendStop)
+
 		# Control sets
 		self.setsX = []
 		self.setsY = []
@@ -68,11 +75,55 @@ class MainWin( wx.Frame):
 			print e
 			exit(1)
 	
+
 	def sendT( self, e):
 		"""
 			Sends the period to the robot
 		"""
 		self.core.sendPeriod( self.spinT.GetValue() )
+
+
+	def sendStop( self, e):
+		"""
+			Resets all the controller
+		"""
+		self.sendAll( 0, 0, 0)
+
+
+	def sendAll( self, A, O, PhaseDif , x_axis = True, y_axis = True):
+		"""
+			Sends every module the same value
+		"""
+		# Sets the same value in all the widgets
+		if x_axis:
+			for widget in self.setsX:
+				widget.sliderA.SetValue(A)
+				widget.valueA.SetLabel(str(A))
+
+				widget.sliderO.SetValue(O)
+				widget.valueO.SetLabel(str(O))
+
+				widget.sliderPh.SetValue(PhaseDif)
+				widget.valuePh.SetLabel(str(PhaseDif))
+
+			axis = self.core.X_AXIS
+			self.core.sendWave( A, O, PhaseDif, axis, -1)
+			time.sleep(0.01)	
+
+		if y_axis:
+			for widget in self.setsY:
+				widget.sliderA.SetValue(A)
+				widget.valueA.SetLabel(str(A))
+
+				widget.sliderO.SetValue(O)
+				widget.valueO.SetLabel(str(O))
+
+				widget.sliderPh.SetValue(PhaseDif)
+				widget.valuePh.SetLabel(str(PhaseDif))
+
+				axis = self.core.Y_AXIS
+				self.core.sendWave( A, O, PhaseDif, axis, -1)
+				time.sleep(0.01)
 
 
 # class ControlSet
@@ -91,7 +142,6 @@ class ControlSet( ):
 
 		# Box around the controls
 		self.box = wx.StaticBox( panel, label=label, pos=pos, size=(290, 90)) 
-
 
 		# Controls for the amplitude
 		self.textA = wx.StaticText( panel, label='A ', pos=(pos[0]+5, pos[1]+20) )
@@ -134,7 +184,22 @@ class ControlSet( ):
 		self.valueA.SetLabel( str(value) )
 
 		# Send Value
-		self.send()
+		if self.identifier[0] == 0 and self.parent.checkLockX.GetValue():
+			A = self.sliderA.GetValue()
+			O = self.sliderO.GetValue()
+			Ph = self.sliderPh.GetValue()
+
+			self.parent.sendAll( A, O, Ph, True, False)
+
+		elif self.identifier[0] == 1 and self.parent.checkLockY.GetValue():
+			A = self.sliderA.GetValue()
+			O = self.sliderO.GetValue()
+			Ph = self.sliderPh.GetValue()
+
+			self.parent.sendAll( A, O, Ph, False, True)
+
+		else:
+			self.send()
 		
 
 		 	
@@ -149,7 +214,23 @@ class ControlSet( ):
 		self.valueO.SetLabel( str(value) )
 
 		# Send Value
-		self.send()
+		if self.identifier[0] == 0 and self.parent.checkLockX.GetValue():
+			A = self.sliderA.GetValue()
+			O = self.sliderO.GetValue()
+			Ph = self.sliderPh.GetValue()
+
+			self.parent.sendAll( A, O, Ph, True, False)
+
+		elif self.identifier[0] == 1 and self.parent.checkLockY.GetValue():
+			A = self.sliderA.GetValue()
+			O = self.sliderO.GetValue()
+			Ph = self.sliderPh.GetValue()
+
+			self.parent.sendAll( A, O, Ph, False, True)
+
+		else:
+			self.send()
+		
 
 
 	def OnSliderScrollPh(self, e):
@@ -163,7 +244,25 @@ class ControlSet( ):
 		self.valuePh.SetLabel( str(value) )
 
 		# Send Value
-		self.send()
+		if self.identifier[0] == 0 and self.parent.checkLockX.GetValue():
+			A = self.sliderA.GetValue()
+			O = self.sliderO.GetValue()
+			Ph = self.sliderPh.GetValue()
+
+			self.parent.sendAll( A, O, Ph, True, False)
+
+		elif self.identifier[0] == 1 and self.parent.checkLockY.GetValue():
+			A = self.sliderA.GetValue()
+			O = self.sliderO.GetValue()
+			Ph = self.sliderPh.GetValue()
+
+			self.parent.sendAll( A, O, Ph, False, True)
+
+		else:
+			self.send()
+		
+
+
 
 	def send( self):
 		valueA = self.sliderA.GetValue()
@@ -226,6 +325,7 @@ class SerialControls:
 
 			self.setStatus('Waiting for reset')
 			self.parent.core.startup( portName, baudRate, self.passwordDialog.GetValue())
+			self.passwordDialog.Destroy()
 			self.setStatus('connected')
 
 		

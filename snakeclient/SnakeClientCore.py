@@ -69,15 +69,19 @@ class Core:
 		"""
 			Sends a particular wave to the robot
 		"""
-		self.serialPort.write( self.commandWave( amplitude, offset, phase, axis, index))
-
+		try:
+			self.serialPort.write( self.commandWave( amplitude, offset, phase, axis, index))
+		except AttributeError, e:
+			print '[Error] Robot not connected: [' + str(e) + ']'			
 
 	def sendPeriod( self, period):
 		"""
 			Sends the value for the period
 		"""
-		self.serialPort.write( self.commandPeriod( period))
- 
+		try:		
+			self.serialPort.write( self.commandPeriod( period))
+ 		except AttributeError, e:
+			print 'Not connected: [' + str(e) + ']'		
 
 	def authenticate(self, key):
 		"""
